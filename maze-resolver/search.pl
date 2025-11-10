@@ -1,4 +1,4 @@
-:- dynamic trasforma/3, applicabile/2, finale/1.
+:- dynamic trasforma/3, applicabile/2, finale/1, iniziale/1.
 % ============================================
 % RICERCA IN PROFONDITÀ - Versione Naive
 % ============================================
@@ -181,9 +181,112 @@ ida_limitata(S, Visitati, [Az|Resto], Soglia) :-
     Soglia > 0,                                     % Controllo di sicurezza
     stato_finale_migliore(S, UscitaMigliore, _),    % Trova uscita migliore
     calcola_fn(S, UscitaMigliore, Visitati, Fn),    % Calcola f(n)
-    Fn =< Soglia,                                   % PRUNING: rispetta soglia
+    Fn =< Soglia,                                   % PRUNING: si interrompe se superiamo la solgia
     azioni_ordinate(S, AzioniOrd),                  % Ordina azioni per euristica
     member((Az, _), AzioniOrd),                     % Prova azioni in ordine
     trasforma(Az, S, SNuovo),
-    \+ member(SNuovo, Visitati),                    % Non revisitare
+    \+ member(SNuovo, Visitati),                    % Non rivisitare
     ida_limitata(SNuovo, [S|Visitati], Resto, Soglia).
+
+
+% Considerazioni: 
+% Trova tante soluzioni, sempre che rispettino la solgia. Questo perchè anche solo cambiando un 
+% piccolo passo del percorso si ottine un cammino diverso, seppur con la stessa lunghezza. Quindi se vado prima
+% a nord e poi ad est, o prima ad est e poi a nord, mi trovo praticamente nella stessa posizione, anche se il 
+% cammino è diverso.
+
+
+
+% ============================================
+% IDA* - Gestione next_depth
+% ============================================
+
+% Predicati dinamici per salvare le soglie
+:- dynamic current_depth/1.
+:- dynamic next_depth/1.
+
+% trova_next_depth(Fn)
+% Aggiorna next_depth se Fn è il nuovo minimo oltre la soglia corrente
+
+trova_next_depth(Fn) :-
+    current_depth(SogliaAttuale),
+    Fn > SogliaAttuale,                         % Fn ha superato la soglia
+    (   next_depth(NextAttuale)
+    ->  (   Fn < NextAttuale                       % Se è minore del next corrente
+        ->  retract(next_depth(NextAttuale)),
+            assert(next_depth(Fn))              % Aggiorna next_depth
+        ;   true                                  
+        )                                       % Altrimenti lascia com'è
+    ;   assert(next_depth(Fn))                  % Prima volta, crea next_depth
+    ).
+
+
+% ida_limitata_track(Stato, Visitati, Cammino, Soglia)
+% Versione che traccia i valori f(n) che superano la soglia
+
+ida_limitata_track(S, _, [], _) :-
+    finale(LF),
+    member(S, LF),
+    !.
+
+ida_limitata_track(S, Visitati, [Az|Resto], Soglia) :-
+    stato_finale_migliore(S, UscitaMigliore, _),
+    calcola_fn(S, UscitaMigliore, Visitati, Fn),
+    (   Fn =< Soglia
+    ->  azioni_ordinate(S, AzioniOrd),                              % f(n) rispetta la soglia, esplora
+        
+        member((Az, _), AzioniOrd),
+        trasforma(Az, S, SNuovo),
+        \+ member(SNuovo, Visitati),
+        ida_limitata_track(SNuovo, [S|Visitati], Resto, Soglia)
+    ;   trova_next_depth(Fn),                                       % f(n) supera la soglia, salva per prossima iterazione     
+        fail                                                        % Forza backtracking
+    ).
+
+
+
+% ============================================
+% IDA* - Wrapper Principale
+% ============================================
+
+% initialize_ida/0
+% Pulisce e inizializza le soglie
+
+initialize_ida :-
+    retractall(current_depth(_)),
+    retractall(next_depth(_)),
+    iniziale(S),
+    stato_finale_migliore(S, UscitaMigliore, _),
+    calcola_fn(S, UscitaMigliore, [], SogliaIniziale),
+    assert(current_depth(SogliaIniziale)).
+
+% ida_star(Cammino)
+% Entry point principale di IDA*
+
+ida_star(Cammino) :-
+    initialize_ida,
+    ida_star_loop(Cammino).
+
+% ida_star_loop(Cammino)
+% Loop di iterative deepening
+
+ida_star_loop(Cammino) :-
+    iniziale(S),
+    current_depth(Soglia),
+    retractall(next_depth(_)),                          % Pulisce next_depth per la nuova iterazione
+    write('Iterazione con soglia: '), write(Soglia), nl,
+    (   ida_limitata_track(S, [], Cammino, Soglia)
+    ->  true                                            % Trovata soluzione entro soglia
+    ;                                                   % Nessuna soluzione entro soglia: prova ad aumentarla
+        (   next_depth(NuovaSoglia)
+        ->  (   NuovaSoglia > Soglia
+            ->  retract(current_depth(_)),
+                assert(current_depth(NuovaSoglia)),
+                ida_star_loop(Cammino)
+            ;   % Protezione: next_depth non è aumentata (anomalia)
+                write('Nessun progresso possibile.'), nl, fail
+            )
+        ;   % Non esiste un next_depth: nessun nodo oltre la soglia → fallisce (o impossibile)
+            write('Nessun next_depth trovato: problema insolubile entro lo spazio di ricerca.'), nl, fail
+        )
+    ).
