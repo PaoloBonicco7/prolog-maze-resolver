@@ -7,7 +7,7 @@ num_col(10).
 num_righe(10).
 
 % Posizione iniziale dell'Agente
-iniziale(pos(5, 1)).
+iniziale(pos(1, 1)).
 
 % Celle occupate (ostacoli)
 occupata(pos(1, 7)).

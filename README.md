@@ -22,5 +22,17 @@ swipl
 [file_name1, file_name2].
 ```
 
+## Usefull commands
 
+### Findall
+
+Sintassi: findall(Cosa_Cercare, Condizione, Lista_Risultati)
+
+Esempio:
+
+```prolog
+  ?- iniziale(S), findall(A, applicabile(A, S), Azioni).
+  S = pos(5, 1),
+  Azioni = [nord, sud, est].
+```
 
