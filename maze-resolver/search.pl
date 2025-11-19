@@ -290,3 +290,224 @@ ida_star_loop(Cammino) :-
             write('Nessun next_depth trovato: problema insolubile entro lo spazio di ricerca.'), nl, fail
         )
     ).
+
+
+
+% ============ A* ==================
+% A* - Funzionamento:
+% 1. Mantieni due liste:
+%    - OPEN (frontiera): nodi da espandere, ordinati per f(n)
+%    - CLOSED (chiusi): nodi già espansi
+   
+% 2. Loop principale:
+%    - Si prende il nodo con minimo f(n) da OPEN
+%    - Se è goal → SUCCESSO!
+%    - Altrimenti:
+%      * Espandi i successori
+%      * Per ogni successore:
+%        - Se in CLOSED → salta
+%        - Se in OPEN con f(n) migliore → aggiorna
+%        - Altrimenti → aggiungi a OPEN
+%      * Aggiungi nodo corrente a CLOSED
+
+
+
+% ============================================
+% A* - Struttura Nodo
+% ============================================
+
+% Nodo rappresentato come: nodo(Stato, Cammino, Gn, Hn, Fn)
+% - Stato: posizione corrente
+% - Cammino: lista di azioni per arrivarci
+% - Gn: costo reale dal nodo iniziale (g(n))
+% - Hn: stima euristica al goal (h(n))
+% - Fn: f(n) = g(n) + h(n)
+
+% crea_nodo_iniziale(Nodo)
+% Crea il nodo iniziale per A*
+
+crea_nodo_iniziale(nodo(S, [], 0, Hn, Fn)) :-
+    iniziale(S),
+    stato_finale_migliore(S, Uscita, _),
+    manhattan(S, Uscita, Hn),
+    Fn is 0 + Hn.
+
+
+% ============================================
+% A* - Generazione Successori
+% ============================================
+
+% genera_successori(Nodo, Successori)
+% Genera tutti i nodi successori validi
+
+genera_successori(nodo(S, Cammino, Gn, _, _), Successori) :-
+    stato_finale_migliore(S, Uscita, _),
+    findall(
+        nodo(SNuovo, [Az|Cammino], GnNuovo, HnNuovo, FnNuovo),
+        (
+            applicabile(Az, S),
+            trasforma(Az, S, SNuovo),
+            % \+ member(SNuovo, Cammino),              % Evita cicli semplici
+            GnNuovo is Gn + 1,                   % Incrementa g(n)
+            manhattan(SNuovo, Uscita, HnNuovo),  % Calcola h(n)
+            FnNuovo is GnNuovo + HnNuovo         % Calcola f(n)
+        ),
+        Successori
+    ).
+
+
+
+% ============================================
+% A* - Coda di Priorità (Lista Ordinata)
+% ============================================
+
+% inserisci_ordinato(Nodo, Coda, NuovaCoda)
+% Inserisce un nodo nella coda mantenendo l'ordine per f(n)
+
+inserisci_ordinato(Nodo, [], [Nodo]).
+
+inserisci_ordinato(nodo(S, C, G, H, F), [nodo(S1, C1, G1, H1, F1)|Resto], [nodo(S, C, G, H, F), nodo(S1, C1, G1, H1, F1)|Resto]) :-
+    F =< F1,
+    !.
+
+inserisci_ordinato(Nodo, [Primo|Resto], [Primo|NuovaCoda]) :-
+    inserisci_ordinato(Nodo, Resto, NuovaCoda).
+
+% inserisci_lista_ordinata(ListaNodi, Coda, NuovaCoda)
+% Inserisce una lista di nodi nella coda
+
+inserisci_lista_ordinata([], Coda, Coda).
+
+inserisci_lista_ordinata([N|Resto], Coda, NuovaCoda) :-
+    inserisci_ordinato(N, Coda, CodaTemp),
+    inserisci_lista_ordinata(Resto, CodaTemp, NuovaCoda).
+
+
+
+% ============================================
+% A* - Gestione Lista Chiusi
+% ============================================
+
+% stato_in_closed(Stato, Closed)
+% Verifica se uno stato è già nella lista chiusi
+
+stato_in_closed(Stato, Closed) :-
+    member(nodo(Stato, _, _, _, _), Closed).
+
+% stato_in_open(Stato, Open)
+% Verifica se uno stato è già nella coda open
+
+stato_in_open(Stato, Open) :-
+    member(nodo(Stato, _, _, _, _), Open).
+
+% rimuovi_stato_peggiore(Stato, FnNuovo, Open, OpenAggiornata)
+% Se lo stato è in OPEN con f(n) peggiore, lo rimuove
+
+rimuovi_stato_peggiore(_, _, [], []).
+
+rimuovi_stato_peggiore(Stato, FnNuovo, [nodo(Stato, _, _, _, FnVecchio)|Resto], Resto) :-
+    FnNuovo < FnVecchio,  % Nuovo percorso è migliore
+    !.
+
+rimuovi_stato_peggiore(Stato, FnNuovo, [Primo|Resto], [Primo|RestoAggiornato]) :-
+    rimuovi_stato_peggiore(Stato, FnNuovo, Resto, RestoAggiornato).
+
+
+
+% ============================================
+% A* - Filtraggio Successori
+% ============================================
+
+% filtra_successori(Successori, Open, Closed, SuccessoriFiltrati, OpenAggiornata)
+% Filtra i successori in base a OPEN e CLOSED
+
+filtra_successori([], Open, _, [], Open).
+
+filtra_successori([nodo(S, C, G, H, F)|Resto], Open, Closed, Filtrati, OpenFinale) :-
+    (   stato_in_closed(S, Closed)
+    ->  % Stato già espanso, salta
+        filtra_successori(Resto, Open, Closed, Filtrati, OpenFinale)
+    ;   stato_in_open(S, Open)
+    ->  % Stato in OPEN, verifica se nuovo percorso è migliore
+        rimuovi_stato_peggiore(S, F, Open, OpenTemp),
+        filtra_successori(Resto, OpenTemp, Closed, FiltriResto, OpenFinale),
+        Filtrati = [nodo(S, C, G, H, F)|FiltriResto]
+    ;   % Stato nuovo, aggiungi
+        filtra_successori(Resto, Open, Closed, FiltriResto, OpenFinale),
+        Filtrati = [nodo(S, C, G, H, F)|FiltriResto]
+    ).
+
+
+
+% ============================================
+% A* - Algoritmo Principale
+% ============================================
+
+% a_star(Cammino)
+% Entry point di A*
+
+a_star(Cammino) :-
+    crea_nodo_iniziale(NodoIniziale),
+    a_star_loop([NodoIniziale], [], Cammino).
+
+% a_star_loop(Open, Closed, Cammino)
+% Loop principale di A*
+
+% CASO BASE: OPEN vuota, nessuna soluzione
+a_star_loop([], _, _) :-
+    write('Nessuna soluzione trovata!'), nl,
+    fail.
+
+% CASO BASE: Primo nodo in OPEN è il goal
+a_star_loop([nodo(S, Cammino, _, _, _)|_], _, CamminoFinale) :-
+    finale(LF),
+    member(S, LF),
+    !,
+    reverse(Cammino, CamminoFinale).  % Inverti perché costruito al contrario
+
+% CASO RICORSIVO: Espandi il nodo con minimo f(n)
+a_star_loop([NodoCorrente|RestoOpen], Closed, Cammino) :-
+    NodoCorrente = nodo(S, _, _, _, Fn),
+    write('Espando: '), write(S), write(' con f(n)='), write(Fn), nl,
+    
+    % Genera successori
+    genera_successori(NodoCorrente, Successori),
+    
+    % Filtra successori
+    filtra_successori(Successori, RestoOpen, Closed, SuccessoriFiltrati, OpenAggiornata),
+    
+    % Inserisci successori filtrati in OPEN
+    inserisci_lista_ordinata(SuccessoriFiltrati, OpenAggiornata, NuovaOpen),
+    
+    % Aggiungi nodo corrente a CLOSED
+    NuovaClosed = [NodoCorrente|Closed],
+    
+    % Ricorsione
+    a_star_loop(NuovaOpen, NuovaClosed, Cammino).
+
+
+
+% ============================================
+% A* - Versione Ottimizzata
+% ============================================
+
+% a_star_silent(Cammino)
+% Versione senza output di debug
+
+a_star_silent(Cammino) :-
+    crea_nodo_iniziale(NodoIniziale),
+    a_star_loop_silent([NodoIniziale], [], Cammino).
+
+a_star_loop_silent([], _, _) :- fail.
+
+a_star_loop_silent([nodo(S, Cammino, _, _, _)|_], _, CamminoFinale) :-
+    finale(LF),
+    member(S, LF),
+    !,
+    reverse(Cammino, CamminoFinale).
+
+a_star_loop_silent([NodoCorrente|RestoOpen], Closed, Cammino) :-
+    genera_successori(NodoCorrente, Successori),
+    filtra_successori(Successori, RestoOpen, Closed, SuccessoriFiltrati, OpenAggiornata),
+    inserisci_lista_ordinata(SuccessoriFiltrati, OpenAggiornata, NuovaOpen),
+    a_star_loop_silent(NuovaOpen, [NodoCorrente|Closed], Cammino).
