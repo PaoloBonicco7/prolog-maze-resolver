@@ -95,7 +95,7 @@ trasforma(giu, Stato, StatoNuovo) :-
     scambia(Stato, PosVuoto, PosSotto, StatoNuovo).
 
 % sinistra: muove il vuoto una colonna a sinistra
-trasforma(sinistra, Stato, StatoNuovo) :-
+trasforma(sx, Stato, StatoNuovo) :-
     trova_vuoto(Stato, PosVuoto),
     indice_posizione(PosVuoto, Riga, Col),
     ColSinistra is Col - 1,                % Calcola nuova colonna
@@ -103,7 +103,7 @@ trasforma(sinistra, Stato, StatoNuovo) :-
     scambia(Stato, PosVuoto, PosSinistra, StatoNuovo).
 
 % destra: muove il vuoto una colonna a destra
-trasforma(destra, Stato, StatoNuovo) :-
+trasforma(dx, Stato, StatoNuovo) :-
     trova_vuoto(Stato, PosVuoto),
     indice_posizione(PosVuoto, Riga, Col),
     ColDestra is Col + 1,                  % Calcola nuova colonna

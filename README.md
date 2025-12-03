@@ -24,6 +24,20 @@ swipl
 
 ## Usefull commands
 
+### Trace
+
+To enable tracing of Prolog execution:
+
+```prolog
+  ?- trace.
+```
+
+To disable tracing:
+
+```prolog
+  ?- notrace.
+```
+
 ### Findall
 
 Sintassi: findall(Cosa_Cercare, Condizione, Lista_Risultati)

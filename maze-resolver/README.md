@@ -1,5 +1,12 @@
 # Qua riportiamo alcuni frammenti di codice Prolog utili alla comprensione del progetto.
 
+## Run Prolog Interpreter
+
+Per eseguire il file maze.pl con SWI-Prolog, aprire il terminale e digitare:
+
+```bash
+swipl
+```
 
 ## Funzionamento Labirinto (maze.pl)
 

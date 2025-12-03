@@ -356,10 +356,10 @@ confronta_algoritmi :-
 % ============================================
 
 
-% % Carica i file
-% ?- [labirinto].    % File con num_righe, num_col, iniziale, occupata, finale
-% ?- [azioni].       % File con applicabile/2 e trasforma/3
-% ?- [algoritmi].    % Questo file
+% % Caricamento file
+% ?- [maze].    % File con num_righe, num_col, iniziale, occupata, finale
+% ?- [actions].       % File con applicabile/2 e trasforma/3
+% ?- [search_optimized].    % Questo file
 
 % % Test IDA*
 % ?- ida_star(Cammino).
