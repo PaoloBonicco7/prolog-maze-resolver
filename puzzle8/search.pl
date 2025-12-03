@@ -197,7 +197,7 @@ ida_star_puzzle_loop(Cammino) :-
     iniziale(S),                           % stato iniziale da cui partire a ogni iterazione
     current_depth(Soglia),                 % leggo la soglia corrente
     retractall(next_depth(_)),             % azzero i candidati per la prossima soglia
-    % messaggio di debug per capire l'andamento dell'algoritmo
+
     write('IDA* Puzzle: iterazione con soglia f(n) = '),
     write(Soglia), nl,
     (
@@ -214,8 +214,8 @@ ida_star_puzzle_loop(Cammino) :-
             % Se esiste un next_depth, posso tentare un'altra iterazione
             next_depth(NuovaSoglia)
         ->  (
-                NuovaSoglia > Soglia       % controllo che la soglia sia realmente cresciuta
-            ->  retract(current_depth(_)), % sostituisco la vecchia soglia...
+                NuovaSoglia > Soglia                % controllo che la soglia sia realmente cresciuta
+            ->  retract(current_depth(_)),          % sostituisco la vecchia soglia...
                 assert(current_depth(NuovaSoglia)), % ...con la nuova
                 ida_star_puzzle_loop(Cammino)       % e ripeto l'algoritmo con la nuova soglia
             ;   % Se la nuova soglia non è maggiore, significa che non c'è più progresso possibile
@@ -230,10 +230,9 @@ ida_star_puzzle_loop(Cammino) :-
 
 
 % ============================================
-% A* - RICERCA INFORMATA PER PUZZLE DELL'8
+% ==========      A*        ==================
 % ============================================
 %
-% Implementiamo ora l'algoritmo A* per il puzzle 8.
 % A* mantiene:
 %   - una lista OPEN (frontiera) di nodi da espandere, ordinata per f(n)
 %   - una lista CLOSED di nodi già espansi
@@ -276,17 +275,17 @@ crea_nodo_iniziale_puzzle(nodo(S, [], 0, Hn, Fn)) :-
 % possibili allo stato corrente S.
 
 genera_successori_puzzle(nodo(S, Cammino, Gn, _, _), Successori) :-
-    finale(Target),                       % lo stato finale è sempre lo stesso
+    finale(Target),                                     % lo stato finale è sempre lo stesso
     findall(
         nodo(SNuovo, [Az|Cammino], GnNuovo, HnNuovo, FnNuovo),
         (
-            applicabile(Az, S),           % prendo un'azione Az applicabile allo stato S
-            trasforma(Az, S, SNuovo),     % calcolo il nuovo stato SNuovo applicando Az
-            GnNuovo is Gn + 1,            % il costo reale aumenta di 1 (una mossa in più)
-            manhattan_puzzle(SNuovo, Target, HnNuovo), % ricalcolo h(n) sul nuovo stato
-            FnNuovo is GnNuovo + HnNuovo  % f(n) = g(n) + h(n) per il successore
+            applicabile(Az, S),                         % prendo un'azione Az applicabile allo stato S
+            trasforma(Az, S, SNuovo),                   % calcolo il nuovo stato SNuovo applicando Az
+            GnNuovo is Gn + 1,                          % il costo reale aumenta di 1 (una mossa in più)
+            manhattan_puzzle(SNuovo, Target, HnNuovo),  % ricalcolo h(n) sul nuovo stato
+            FnNuovo is GnNuovo + HnNuovo                % f(n) = g(n) + h(n) per il successore
         ),
-        Successori                        % lista di tutti i nodi successori generati
+        Successori                                      % lista di tutti i nodi successori generati
     ).
 
 
@@ -425,11 +424,8 @@ filtra_successori_puzzle(
 % Restituisce in Cammino la lista di azioni ottima.
 
 a_star_puzzle(Cammino) :-
-    crea_nodo_iniziale_puzzle(NodoIniziale),    % costruisco il nodo iniziale
+    crea_nodo_iniziale_puzzle(NodoIniziale),  
     write('A* Puzzle: inizializzazione completata'), nl,
-    % chiamo il loop principale con:
-    %   OPEN   = [NodoIniziale]
-    %   CLOSED = []
     a_star_puzzle_loop([NodoIniziale], [], Cammino).
 
 
@@ -457,7 +453,8 @@ a_star_puzzle_loop([nodo(S, Cammino, _, _, Fn)|_], _, CamminoFinale) :-
     S = Target,                                % controllo se S coincide con lo stato finale
     !,                                         % taglio: non cerco altre soluzioni
     reverse(Cammino, CamminoFinale),           % Cammino è costruito al contrario, lo inverto
-    write('A* Puzzle: soluzione trovata! '),
+    write('A* Puzzle: soluzione trovata! '), nl,
+    write('A* Puzzle: '), write(S), write(" "),
     write('[f(n)='), write(Fn), write(']'), nl.
 
 % CASO RICORSIVO:
@@ -469,8 +466,8 @@ a_star_puzzle_loop([nodo(S, Cammino, _, _, Fn)|_], _, CamminoFinale) :-
 
 a_star_puzzle_loop([NodoCorrente|RestoOpen], Closed, Cammino) :-
     NodoCorrente = nodo(S, _, _, _, Fn),
-    write('A* Puzzle: espando stato '), write(S),
-    write(' [f(n)='), write(Fn), write(']'), nl,
+    % write('A* Puzzle: espando stato '), write(S),
+    % write(' [f(n)='), write(Fn), write(']'), nl,
     genera_successori_puzzle(NodoCorrente, Successori),        % genero successori di S
     filtra_successori_puzzle(Successori, RestoOpen, Closed,    % applico regole A* sui successori
                              SuccessoriFiltrati, OpenAggiornata),
@@ -478,3 +475,44 @@ a_star_puzzle_loop([NodoCorrente|RestoOpen], Closed, Cammino) :-
                                     OpenAggiornata,
                                     NuovaOpen),
     a_star_puzzle_loop(NuovaOpen, [NodoCorrente|Closed], Cammino).
+
+
+% ============================================
+% CONFRONTO IDA* vs A* (Puzzle 8)
+% ============================================
+
+% confronta_algoritmi_puzzle/0
+% Confronta, sullo stesso stato iniziale e finale, le prestazioni
+% di IDA* e A* in termini di:
+%   - tempo di esecuzione (walltime)
+%   - lunghezza del cammino trovato
+
+confronta_algoritmi_puzzle :-
+    write('=== CONFRONTO IDA* vs A* (Puzzle 8) ==='), nl, nl,
+
+    % ---- IDA* ----
+    write('--- IDA* ---'), nl,
+    statistics(walltime, [_|_]),           % azzero il contatore di tempo
+    ida_star_puzzle(CamminoIDA),           % eseguo IDA*
+    statistics(walltime, [_|TempoIDA]),    % leggo il tempo impiegato
+    length(CamminoIDA, LunghezzaIDA),
+    write('Tempo: '), write(TempoIDA), write(' ms'), nl,
+    write('Lunghezza cammino: '), write(LunghezzaIDA), nl,
+    write('Cammino: '), write(CamminoIDA), nl, nl,
+
+    % ---- A* ----
+    write('--- A* ---'), nl,
+    statistics(walltime, [_|_]),
+    a_star_puzzle(CamminoAStar),           % eseguo A*
+    statistics(walltime, [_|TempoAStar]),
+    length(CamminoAStar, LunghezzaAStar),
+    write('Tempo: '), write(TempoAStar), write(' ms'), nl,
+    write('Lunghezza cammino: '), write(LunghezzaAStar), nl,
+    write('Cammino: '), write(CamminoAStar), nl, nl,
+
+    % ---- Riepilogo ----
+    write('=== RIEPILOGO ==='), nl,
+    write('Entrambi trovano cammini ottimi: '),
+    (LunghezzaIDA =:= LunghezzaAStar -> write('SI') ; write('NO')), nl,
+    write('A* è più veloce: '),
+    (TempoAStar < TempoIDA -> write('SI') ; write('NO')), nl.

@@ -5,7 +5,17 @@
 %   4 5 6
 %   7 8 0
 
-iniziale([0,1,2,3,4,5,6,7,8]).
+% iniziale([0,1,2,3,4,5,6,7,8]). % iniziale semplice
+% iniziale([1,2,3,4,5,6,0,7,8]). % 2 mosse
+% iniziale([1,2,3,5,0,6,4,7,8]). % 4 mosse
+% iniziale([0,1,3,7,2,4,8,6,5]). % 10 mosse
+iniziale([2,5,7,1,4,3,8,0,6]). % 15 mosse
+% iniziale([2,8,0,7,4,3,5,1,6]). % 20 mosse
+% iniziale([7,3,5,4,2,1,6,0,8]). % 25 mosse
+% iniziale([7,8,0,4,5,6,3,2,1]). % 30 mosse
+% iniziale([6,4,7,8,5,0,3,2,1]). % 31 mosse
+
+
 finale([1,2,3,4,5,6,7,8,0]).
 
 % posizione_indice/3
