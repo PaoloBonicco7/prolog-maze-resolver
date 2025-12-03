@@ -465,7 +465,7 @@ a_star_puzzle_loop([nodo(S, Cammino, _, _, Fn)|_], _, CamminoFinale) :-
 % - aggiungo NodoCorrente a CLOSED e continuo.
 
 a_star_puzzle_loop([NodoCorrente|RestoOpen], Closed, Cammino) :-
-    NodoCorrente = nodo(S, _, _, _, Fn),
+    % NodoCorrente = nodo(S, _, _, _, Fn),
     % write('A* Puzzle: espando stato '), write(S),
     % write(' [f(n)='), write(Fn), write(']'), nl,
     genera_successori_puzzle(NodoCorrente, Successori),        % genero successori di S
