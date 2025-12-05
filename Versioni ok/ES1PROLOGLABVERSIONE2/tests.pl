@@ -3,13 +3,13 @@
 :- consult('astar.pl').
 :- consult('ida_star.pl').
 :- consult('maze.pl').
-:- consult('actions.pl').
 
 % Stati iniziali per test
 start1([1,2,3,4,0,6,7,5,8]). % Media difficoltà
 start2([0,1,3,4,2,5,7,8,6]). % Difficile
 start3([1,0,3,4,2,5,7,8,6]). % Intermedio
 start4([8,6,7,2,5,4,3,0,1]).
+
 % Test A* per 8-puzzle
 test_astar_puzzle :-
     writeln('=== TEST A* 8-PUZZLE ==='),
@@ -62,6 +62,7 @@ test_astar_maze :-
         writeln('A* labirinto non ha trovato soluzione')
     ),
     writeln('=== FINE TEST ==='), nl.
+
 % Test IDA* per labirinto
 test_ida_maze :-
     writeln('=== TEST IDA* LABIRINTO ==='),

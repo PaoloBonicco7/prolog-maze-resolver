@@ -1,4 +1,5 @@
 :- dynamic num_col/1, occupata/1, num_righe/1.
+
 % ============================================
 % AZIONI - Movimento dell'Agente
 % ============================================

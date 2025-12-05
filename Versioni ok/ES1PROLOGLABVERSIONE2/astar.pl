@@ -29,8 +29,8 @@ astar(Start, Path, Cost) :-
     % --------------------------------------------------------
     % Crea nodo iniziale e chiama astar_open/4
     astar_open([node(Start, [], 0, H)], [], Path, Cost).
-    %                    ↑       ↑   ↑    ↑
-    %                    stato  path g    h   f = g + h (calcolato dopo)
+    %                  ↑    ↑   ↑   ↑
+    %              stato  path  g   h   f = g + h (calcolato dopo)
     %
     % node/4 rappresenta: node(State, PathToHere, Gcost, Heuristic)
     %

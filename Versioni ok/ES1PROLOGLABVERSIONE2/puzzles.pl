@@ -93,7 +93,7 @@ manhattan_sum([], _, H, H).
 manhattan_sum([Tile|Rest], Index, Acc, Total) :-
     % Controlla se la tessera corrente è NUMERATA (non blank)
     (   Tile \= 0  % SOLO TILE NUMERATE - IL BLANK (0) NON CONTA!
-      % CALCOLO DISTANZA MANHATTAN per questa tessera:
+    ->  % CALCOLO DISTANZA MANHATTAN per questa tessera:
         
         % 1. Determina POSIZIONE GOAL della tessera:
         %    Tile=1 → GoalPos=0, Tile=2 → GoalPos=1, ..., Tile=8 → GoalPos=7

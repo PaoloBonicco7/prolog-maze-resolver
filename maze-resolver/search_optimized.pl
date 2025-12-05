@@ -1,8 +1,3 @@
-% ============================================
-% PROGETTO: Algoritmi di Ricerca Informata
-% Implementazione di IDA* e A* per labirinto
-% ============================================
-
 % Dichiarazione predicati dinamici
 :- dynamic trasforma/3, applicabile/2, finale/1, iniziale/1.
 :- dynamic current_depth/1, next_depth/1.
@@ -189,9 +184,14 @@ genera_successori(nodo(S, Cammino, Gn, _, _), Successori) :-
 % Inserisce un nodo nella coda mantenendo l'ordine crescente per f(n)
 % Implementa una coda di priorità come lista ordinata
 inserisci_ordinato(Nodo, [], [Nodo]).
-inserisci_ordinato(nodo(S, C, G, H, F), [nodo(S1, C1, G1, H1, F1)|Resto], 
-                   [nodo(S, C, G, H, F), nodo(S1, C1, G1, H1, F1)|Resto]) :-
-    F =< F1, !.
+inserisci_ordinato(
+    nodo(S, C, G, H, F), 
+    [nodo(S1, C1, G1, H1, F1)|Resto], 
+    [nodo(S, C, G, H, F), 
+    nodo(S1, C1, G1, H1, F1)|Resto]) :-
+    F =< F1, 
+    !.
+
 inserisci_ordinato(Nodo, [Primo|Resto], [Primo|NuovaCoda]) :-
     inserisci_ordinato(Nodo, Resto, NuovaCoda).
 

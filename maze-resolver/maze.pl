@@ -36,4 +36,4 @@ occupata(pos(9, 5)).
 occupata(pos(9, 6)).
 
 % Uscite possibili (lista di posizioni finali)
-finale([pos(5, 10), pos(7, 1)]).
+finale([pos(5, 10), pos(7, 7)]).
