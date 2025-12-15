@@ -1,6 +1,0 @@
-(load 0_Main.clp)
-(load 1_Env.clp)
-(load case1_no_obs.clp)
-(load agentSmart.clp)
-(reset)
-(run)
