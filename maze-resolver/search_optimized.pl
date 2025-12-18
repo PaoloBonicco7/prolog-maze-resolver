@@ -231,9 +231,9 @@ filtra_successori([nodo(S, C, G, H, F)|Resto], Open, Closed, Filtrati, OpenFinal
     (   stato_in_closed(S, Closed)
     ->  filtra_successori(Resto, Open, Closed, Filtrati, OpenFinale)
     ;   stato_in_open(S, Open)
-    ->  rimuovi_stato_peggiore(S, F, Open, OpenTemp),
-        filtra_successori(Resto, OpenTemp, Closed, FiltriResto, OpenFinale),
-        Filtrati = [nodo(S, C, G, H, F)|FiltriResto]
+        ->  rimuovi_stato_peggiore(S, F, Open, OpenTemp),
+            filtra_successori(Resto, OpenTemp, Closed, FiltriResto, OpenFinale),
+            Filtrati = [nodo(S, C, G, H, F)|FiltriResto]
     ;   filtra_successori(Resto, Open, Closed, FiltriResto, OpenFinale),
         Filtrati = [nodo(S, C, G, H, F)|FiltriResto]
     ).
@@ -312,7 +312,7 @@ confronta_algoritmi :-
     % Test A*
     write('--- A* ---'), nl,
     statistics(walltime, [_|_]),
-    a_star_silent(C2),
+    a_star(C2),
     statistics(walltime, [_|T2]),
     length(C2, L2),
     write('Tempo: '), write(T2), write(' ms'), nl,
